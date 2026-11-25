@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A book in Wiseshelf</title>
+<meta property="og:title" content="A book in Wiseshelf">
+<meta property="og:description" content="Open the book in Wiseshelf – EPUB &amp; FB2 Reader.">
+<meta property="og:image" content="https://igorgorelik.github.io/wiseshelf-app/icon.png">
+<link rel="icon" href="../icon.png">
+<link rel="stylesheet" href="../site.css">
+<style>
+.book { margin: 28px 0 18px; }
+.book h1 { margin: 0 0 6px; }
+.book p { margin: 2px 0; color: var(--muted, #777); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0; }
+.actions a { padding: 10px 18px; border-radius: 10px; text-decoration: none; border: 1px solid currentColor; }
+.actions a.primary { background: #B8862B; color: #fff; border-color: #B8862B; }
+</style>
+</head>
+<body>
+<main>
+<div class="hero"><img src="../icon.png" alt=""><div><h1>Wiseshelf</h1></div></div>
+<div class="book"><h1 id="title"></h1><p id="authors"></p><p id="series"></p></div>
+<p id="note"></p>
+<div class="actions">
+<a id="open" class="primary" href="wiseshelf://b"></a>
+<a id="store" href="https://apps.apple.com/app/id6839266000"></a>
+</div>
+<p id="hint" class="note"></p>
+</main>
+<script>
+// The book's marks are after "#": they never reach the server. Book links: docs/book-links.md in the app's repository.
+const T = {
+  en: { note: "Someone sent you a link to this book. If you have Wiseshelf, it opens the book in your own folders.",
+        open: "Open in Wiseshelf", store: "Get Wiseshelf on the App Store",
+        hint: "The link carries no book file: the book opens if it is in your books folder or in a folder shared with you.",
+        bad: "This link to a book is incomplete." },
+  ru: { note: "Вам прислали ссылку на эту книгу. Если у вас есть Wiseshelf, книга откроется в ваших папках.",
+        open: "Открыть в Wiseshelf", store: "Wiseshelf в App Store",
+        hint: "В ссылке нет файла книги: она откроется, если есть в вашей папке с книгами или в папке, к которой вам дали доступ.",
+        bad: "Ссылка на книгу неполная." },
+  he: { note: "שלחו לך קישור לספר הזה. אם Wiseshelf מותקנת אצלך, הספר ייפתח מהתיקיות שלך.",
+        open: "פתיחה ב-Wiseshelf", store: "Wiseshelf ב-App Store",
+        hint: "בקישור אין קובץ של ספר: הספר ייפתח אם הוא נמצא בתיקיית הספרים שלך או בתיקייה ששיתפו איתך.",
+        bad: "הקישור לספר אינו שלם." }
+};
+const lang = (navigator.language || "en").slice(0, 2);
+const t = T[lang] || T.en;
+document.documentElement.lang = T[lang] ? lang : "en";
+if (lang === "he") document.documentElement.dir = "rtl";
+const frag = location.hash.slice(1);
+let book = null;
+try {
+  const b64 = frag.replace(/-/g, "+").replace(/_/g, "/");
+  const bytes = Uint8Array.from(atob(b64 + "===".slice((b64.length + 3) % 4)), c => c.charCodeAt(0));
+  book = JSON.parse(new TextDecoder().decode(bytes));
+} catch (e) {}
+const set = (id, text) => { document.getElementById(id).textContent = text || ""; };
+if (book && book.t) {
+  set("title", book.t);
+  set("authors", (book.a || []).join(", "));
+  if (book.s) set("series", book.s + (book.n ? " · " + book.n : ""));
+  document.title = book.t + " — Wiseshelf";
+  set("note", t.note);
+} else {
+  set("note", t.bad);
+}
+set("open", t.open);
+set("store", t.store);
+set("hint", t.hint);
+document.getElementById("open").href = "wiseshelf://b#" + frag;
+</script>
+</body>
+</html>
